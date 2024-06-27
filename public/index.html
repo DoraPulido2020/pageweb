@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Páginas</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 text-gray-900">
+
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-6">Gestor de Páginas</h1>
+
+        <div class="flex gap-8">
+            <form id="paginaForm" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-1/2">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="nombre">Nombre:</label>
+                    <input
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        type="text" id="nombre" name="nombre" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="apellido">Apellido:</label>
+                    <input
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        type="text" id="apellido" name="apellido" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="correo">Correo:</label>
+                    <input
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        type="email" id="correo" name="correo" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="direccion">Dirección:</label>
+                    <input
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        type="text" id="direccion" name="direccion" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="telefono">Teléfono:</label>
+                    <input
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        type="text" id="telefono" name="telefono" required>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button
+                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                        type="submit">Agregar Página</button>
+                </div>
+            </form>
+            <img  class ="w-1/2 object-cover" src="portada.jpg" alt="">
+        </div>
+
+        <h2 class="text-2xl font-bold mb-4">Páginas</h2>
+        <ul id="paginasList" class="list-disc pl-5"></ul>
+
+        <h1 class="text-3xl font-bold mt-8 mb-4">Información de Contacto</h1>
+        <table class="min-w-full bg-white border border-gray-200">
+            <thead>
+                <tr>
+                    <th class="py-2 px-4 bg-gray-200 border-b border-gray-200">Nombre</th>
+                    <th class="py-2 px-4 bg-gray-200 border-b border-gray-200">Apellido</th>
+                    <th class="py-2 px-4 bg-gray-200 border-b border-gray-200">Correo</th>
+                    <th class="py-2 px-4 bg-gray-200 border-b border-gray-200">Dirección</th>
+                    <th class="py-2 px-4 bg-gray-200 border-b border-gray-200">Teléfono</th>
+                    <th class="py-2 px-4 bg-gray-200 border-b border-gray-200">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="paginasTableBody">
+                <!-- Additional rows can be added here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.getElementById('paginaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const response = await fetch('/api/pagina/agregarPagina', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.text();
+                alert(result);
+                fetchPaginas();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+
+        async function fetchPaginas() {
+            try {
+                const response = await fetch('/api/pagina/obtenerPaginas');
+                const paginas = await response.json();
+                const paginasTableBody = document.getElementById('paginasTableBody');
+                paginasTableBody.innerHTML = '';
+                paginas.forEach(pagina => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="border px-4 py-2">${pagina.nombre}</td>
+                        <td class="border px-4 py-2">${pagina.apellido}</td>
+                        <td class="border px-4 py-2">${pagina.correo}</td>
+                        <td class="border px-4 py-2">${pagina.direccion}</td>
+                        <td class="border px-4 py-2">${pagina.telefono}</td>
+                        <td class="border px-4 py-2">
+                            <div class="flex space-x-2">
+                                <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-2 rounded" onclick="editPagina('${pagina.correo}')">Edit</button>
+                                <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded" onclick="deletePagina('${pagina.correo}')">Delete</button>
+                            </div>
+                        </td>
+                    `;
+                    paginasTableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function editPagina(correo) {
+            window.location.href = `editPage.html?correo=${correo}`;
+        }
+
+        async function deletePagina(correo) {
+            try {
+                const response = await fetch('/api/pagina/borrarPagina', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ correo: correo })
+                });
+                const result = await response.text();
+                alert(result);
+                fetchPaginas();
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        fetchPaginas();
+    </script>
+</body>
+
+</html>
